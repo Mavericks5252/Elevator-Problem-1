@@ -126,7 +126,7 @@ class Elevator {
 			boolean trigger = false;
 			currentFloor = i;
 
-			List<Request> remove = new ArrayList<>();
+			List<Request> toRemoveList = new ArrayList<>();
 			for (Request value : currentJobs) {
 				if ((value.getExternalRequest().getSourceFloor() == currentFloor)
 						&& (value.getInsideElevator() != true)) {
@@ -147,14 +147,14 @@ class Elevator {
 					trigger = true;
 				}
 				if (value.getInternalRequest().getDestinationFloor() == currentFloor) {
-					remove.add(value);
+					toRemoveList.add(value);
 					trigger = true;
 				}
 			}
-			if (!remove.isEmpty()) {
+			if (!toRemoveList.isEmpty()) {
 
-				for (int j = 0; j < remove.size(); j++) {
-					currentJobs.remove(remove.get(j));
+				for (int j = 0; j < toRemoveList.size(); j++) {
+					currentJobs.remove(toRemoveList.get(j));
 				}
 				System.out.print("\nThe elevator has reached " + currentFloor + " dropping off");
 				try {
@@ -169,7 +169,7 @@ class Elevator {
 					e.printStackTrace();
 				}
 				System.out.print("Closing Door\n");
-				remove.clear();
+				toRemoveList.clear();
 			}
 
 			if (trigger == false) {
@@ -223,7 +223,7 @@ class Elevator {
 			}
 			boolean trigger = false;
 			currentFloor = i;
-			List<Request> remove = new ArrayList<>();
+			List<Request> toRemoveList = new ArrayList<>();
 			for (Request value : currentJobs) {
 				if ((value.getExternalRequest().getSourceFloor() == currentFloor)
 						&& (value.getInsideElevator() != true)) {
@@ -244,14 +244,14 @@ class Elevator {
 					trigger = true;
 				}
 				if (value.getInternalRequest().getDestinationFloor() == currentFloor) {
-					remove.add(value);
+					toRemoveList.add(value);
 					trigger = true;
 				}
 			}
-			if (!remove.isEmpty()) {
+			if (!toRemoveList.isEmpty()) {
 
-				for (int j = 0; j < remove.size(); j++) {
-					currentJobs.remove(remove.get(j));
+				for (int j = 0; j < toRemoveList.size(); j++) {
+					currentJobs.remove(toRemoveList.get(j));
 				}
 				System.out.print("\nThe elevator has reached " + currentFloor + " dropping off");
 				try {
@@ -266,7 +266,7 @@ class Elevator {
 					e.printStackTrace();
 				}
 				System.out.print("Closing Door\n");
-				remove.clear();
+				toRemoveList.clear();
 			}
 
 			if (trigger == false) {
@@ -279,73 +279,7 @@ class Elevator {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} /*
-			 * 
-			 * int startFloor = currentFloor;
-			 * if (startFloor <= request.getExternalRequest().getSourceFloor()) {
-			 * for (int i = startFloor; i <= request.getExternalRequest().getSourceFloor();
-			 * i++) {
-			 * try {
-			 * Thread.sleep(1000);
-			 * } catch (InterruptedException e) {
-			 * // TODO Auto-generated catch block
-			 * e.printStackTrace();
-			 * }
-			 * System.out.println("We have reached floor -- " + i);
-			 * currentFloor = i;
-			 * }
-			 * }else {
-			 * for (int i = startFloor; i>=
-			 * request.getExternalRequest().getSourceFloor();i--){
-			 * try {
-			 * Thread.sleep(1000);
-			 * } catch (InterruptedException e) {
-			 * // TODO Auto-generated catch block
-			 * e.printStackTrace();
-			 * }
-			 * System.out.println("We have reached floor -- " + i);
-			 * currentFloor = i;
-			 * }
-			 * }
-			 * 
-			 * 
-			 * System.out.println("Reached Source Floor--opening door");
-			 * try {
-			 * Thread.sleep(1000);
-			 * } catch (InterruptedException e) {
-			 * // TODO Auto-generated catch block
-			 * e.printStackTrace();
-			 * }
-			 * System.out.println("Closing Door");
-			 * 
-			 * startFloor = currentFloor;
-			 * 
-			 * for (int i = startFloor - 1; i >=
-			 * request.getInternalRequest().getDestinationFloor(); i--) {
-			 * try {
-			 * Thread.sleep(1000);
-			 * } catch (InterruptedException e) {
-			 * // TODO Auto-generated catch block
-			 * e.printStackTrace();
-			 * }
-			 * System.out.println("We have reached floor -- " + i);
-			 * currentFloor = i;
-			 * 
-			 * if(i == request.getInternalRequest().getDestinationFloor()){
-			 * System.out.print("\nReached Destination Floor-- "+ i +" opening door -- ");
-			 * try {
-			 * Thread.sleep(1000);
-			 * } catch (InterruptedException e) {
-			 * // TODO Auto-generated catch block
-			 * e.printStackTrace();
-			 * }
-			 * System.out.print("Closing Door");
-			 * }
-			 * if (checkIfNewJobCanBeProcessed(request)) {
-			 * break;
-			 * }
-			 * }
-			 */
+		}
 	}
 
 	private boolean checkIfNewJobCanBeProcessed(Request currentRequest) {
@@ -657,19 +591,11 @@ public class TestElevator {
 		}
 
 		// Test 1: Test for generic up command
-		// ExternalRequest er = new ExternalRequest(Direction.UP, 0);
-		// InternalRequest ir = new InternalRequest(4);
-		// Request request1 = new Request(ir, er);
-		// new Thread(new AddJobWorker(elevator, request1)).start();
+		ExternalRequest er = new ExternalRequest(Direction.UP, 0);
+		InternalRequest ir = new InternalRequest(4);
+		Request request1 = new Request(ir, er);
+		new Thread(new AddJobWorker(elevator, request1)).start();
 
-		// Test 2
-		/*
-		 * ExternalRequest er1 = new ExternalRequest(Direction.UP, 1);
-		 * InternalRequest ir1 = new InternalRequest(4);
-		 * Request request2 = new Request(ir1, er1);
-		 * Thread.sleep(3000);
-		 * new Thread(new AddJobWorker(elevator, request2)).start();
-		 */
 		// Test 2: Combind with Test 1 -- Test for up multiple up commmand and pickup
 		// in motion if pickup floor is less then the current floor
 
@@ -689,19 +615,31 @@ public class TestElevator {
 		 * new Thread(new AddJobWorker(elevator, request3)).start();
 		 */
 
-		// Test 1: Test for generic down command
-		ExternalRequest er = new ExternalRequest(Direction.DOWN, 5);
-		InternalRequest ir = new InternalRequest(0);
-		Request request1 = new Request(ir, er);
-		new Thread(new AddJobWorker(elevator, request1)).start();
-
-		// Test 2: Combind with Test 1 -- Test for up multiple up commmand and pickup in
-		// motion if pickup floor is less then the current floor
-		ExternalRequest er1 = new ExternalRequest(Direction.DOWN, 2);
-		InternalRequest ir1 = new InternalRequest(0);
+		// Test 4: Combind with Test 1 -- Test for up multiple up commmands that where
+		// multiple passengers get on a single floor
+		ExternalRequest er1 = new ExternalRequest(Direction.UP, 1);
+		InternalRequest ir1 = new InternalRequest(4);
 		Request request2 = new Request(ir1, er1);
 		Thread.sleep(3000);
 		new Thread(new AddJobWorker(elevator, request2)).start();
+
+		// Test 1: Test for generic down command
+		/*
+		 * ExternalRequest er = new ExternalRequest(Direction.DOWN, 5);
+		 * InternalRequest ir = new InternalRequest(0);
+		 * Request request1 = new Request(ir, er);
+		 * new Thread(new AddJobWorker(elevator, request1)).start();
+		 */
+
+		// Test 2: Combind with Test 1 -- Test for up multiple up commmand and pickup in
+		// motion if pickup floor is less then the current floor
+		/*
+		 * ExternalRequest er1 = new ExternalRequest(Direction.DOWN, 2);
+		 * InternalRequest ir1 = new InternalRequest(0);
+		 * Request request2 = new Request(ir1, er1);
+		 * Thread.sleep(3000);
+		 * new Thread(new AddJobWorker(elevator, request2)).start();
+		 */
 		/*
 		 * //Test 3: Combind with Test 1 -- Test for up multiple up commmand and a
 		 * higher destination floor then the original command is added
