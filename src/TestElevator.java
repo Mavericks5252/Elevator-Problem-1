@@ -3,6 +3,7 @@ import java.util.TreeSet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 class Elevator {
 	private Direction currentDirection = Direction.UP;
@@ -124,7 +125,7 @@ class Elevator {
 			}
 			boolean trigger = false;
 			currentFloor = i;
-			Request remove = null;
+			List<Request> remove = new ArrayList<>();
 			for (Request value : currentJobs) {
 				if ((value.getExternalRequest().getSourceFloor() == currentFloor)
 						&& (value.getInsideElevator() != true)) {
@@ -158,12 +159,21 @@ class Elevator {
 						e.printStackTrace();
 					}
 					System.out.print("Closing Door\n");
-					remove = value;
+					for (Request value1 : currentJobs) {
+						if (value1.getInternalRequest().getDestinationFloor() == value.getInternalRequest()
+								.getDestinationFloor()) {
+							remove.add(value1);
+						}
+					}
 					trigger = true;
 				}
-			}
-			if (remove != null) {
-				currentJobs.remove(remove);
+				if (!remove.isEmpty()) {
+
+					for (int j = 0; j < remove.size(); j++) {
+						currentJobs.remove(remove.get(j));
+					}
+					remove.clear();
+				}
 			}
 
 			if (trigger == false) {
