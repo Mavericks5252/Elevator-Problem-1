@@ -521,9 +521,9 @@ class Request implements Comparable<Request> {
 
 	@Override
 	public int compareTo(Request req) {
-		if (this.getInternalRequest().getDestinationFloor() == req.getInternalRequest().getDestinationFloor())
+		if (this.getExternalRequest().getSourceFloor() == req.getExternalRequest().getSourceFloor())
 			return 0;
-		else if (this.getInternalRequest().getDestinationFloor() > req.getInternalRequest().getDestinationFloor())
+		else if (this.getExternalRequest().getSourceFloor() > req.getExternalRequest().getSourceFloor())
 			return 1;
 		else
 			return -1;
@@ -666,7 +666,7 @@ public class TestElevator {
 		// in motion if pickup floor is less then the current floor
 
 		ExternalRequest er1 = new ExternalRequest(Direction.UP, 2);
-		InternalRequest ir1 = new InternalRequest(3);
+		InternalRequest ir1 = new InternalRequest(4);
 		Request request2 = new Request(ir1, er1);
 		Thread.sleep(3000);
 		new Thread(new AddJobWorker(elevator, request2)).start();
