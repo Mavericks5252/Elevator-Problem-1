@@ -3,6 +3,10 @@ import java.util.TreeSet;
 import java.util.ArrayList;
 import java.util.List;
 
+// Features not implemented:
+// support for multiple elevators in one building
+// fire call button
+
 //state of the elevator
 enum State {
 
