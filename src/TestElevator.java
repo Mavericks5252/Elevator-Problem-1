@@ -1,10 +1,23 @@
 
 import java.util.TreeSet;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.List;
 
+//state of the elevator
+enum State {
+
+	MOVING, STOPPED, IDLE
+
+}
+
+// direction
+enum Direction {
+
+	UP, DOWN
+
+}
+
+// class for elevator instance
 class Elevator {
 	private Direction currentDirection = Direction.UP;
 	private State currentState = State.IDLE;
@@ -15,7 +28,6 @@ class Elevator {
 
 	// Jobs which are be processed
 	private TreeSet<Request> currentJobs = new TreeSet<>();
-	private TreeSet<Request> currentFloors = new TreeSet<>();
 
 	// Up direction jobs that are waiting to be processed
 	private TreeSet<Request> upPendingJobs = new TreeSet<>();
@@ -73,6 +85,7 @@ class Elevator {
 		}
 	}
 
+	// method checks to see if there is a current job in the que
 	public boolean checkIfJob() {
 		try {
 			Thread.sleep(10);
@@ -86,6 +99,7 @@ class Elevator {
 
 	}
 
+	// method handles all up direction requests
 	private void processUpRequest() {
 		// Set to floors that probably wont exist for simplicity
 		int lowestFloorRequest = -9999;
@@ -113,20 +127,21 @@ class Elevator {
 
 		}
 
+		// start at the lowest floor and go up picking and dropping off
 		for (int i = lowestFloorRequest; i <= highestFloor; i++) {
+			// if a requests gets added while the program is in the loop
 			for (Request value : currentJobs) {
 				if (highestFloor < value.getInternalRequest().getDestinationFloor()) {
 					highestFloor = value.getInternalRequest().getDestinationFloor();
 				}
 			}
-			for (Request value : currentJobs) {
-				Set<Integer> floorsToStop = new HashSet<Integer>();
-				floorsToStop.add(value.getInternalRequest().getDestinationFloor());
-			}
+			// trigger means elevator has either dropped off or picked up this floor.
+			// reduces redundancy in terminal
 			boolean trigger = false;
 			currentFloor = i;
-
+			// new arraylist of requests to remove
 			List<Request> toRemoveList = new ArrayList<>();
+
 			for (Request value : currentJobs) {
 				if ((value.getExternalRequest().getSourceFloor() == currentFloor)
 						&& (value.getInsideElevator() != true)) {
@@ -186,6 +201,7 @@ class Elevator {
 		}
 	}
 
+	// method handles down requests
 	private void processDownRequest() {
 
 		// Set to floors that probably wont exist for simplicity
@@ -282,37 +298,8 @@ class Elevator {
 		}
 	}
 
-	private boolean checkIfNewJobCanBeProcessed(Request currentRequest) {
-		if (checkIfJob()) {
-			if (currentDirection == Direction.UP) {
-				Request request = currentJobs.pollLast();
-				if (request.getInternalRequest().getDestinationFloor() < currentRequest.getInternalRequest()
-						.getDestinationFloor()) {
-					currentJobs.add(request);
-					currentJobs.add(currentRequest);
-					return true;
-				}
-				currentJobs.add(request);
-
-			}
-
-			if (currentDirection == Direction.DOWN) {
-				Request request = currentJobs.pollFirst();
-				if (request.getInternalRequest().getDestinationFloor() > currentRequest.getInternalRequest()
-						.getDestinationFloor()) {
-					currentJobs.add(request);
-					currentJobs.add(currentRequest);
-					return true;
-				}
-				currentJobs.add(request);
-
-			}
-
-		}
-		return false;
-
-	}
-
+	// method to move the elevator to the initial floor when the first command is
+	// put in the treeset
 	private void moveToSourceFloor(Integer sourceFloor) {
 		int startfloor = currentFloor;
 		if (startfloor < sourceFloor) {
@@ -338,6 +325,7 @@ class Elevator {
 		}
 	}
 
+	// method adds down jobs in the pending que to the current que
 	private void addPendingDownJobsToCurrentJobs() {
 		if (!downPendingJobs.isEmpty()) {
 			System.out.println("\nAdded pending down jobs to current jobs\n");
@@ -350,6 +338,7 @@ class Elevator {
 
 	}
 
+	// method adds up jobs in the pending que to the current que
 	private void addPendingUpJobsToCurrentJobs() {
 		if (!upPendingJobs.isEmpty()) {
 			System.out.println("\nAdded pending up jobs to current jobs\n");
@@ -364,7 +353,24 @@ class Elevator {
 
 	}
 
+	// method determines where to put the request(wether it can be processed
+	// immediately)
 	public void addJob(Request request) {
+		// Error checking for up button but actually want to go down
+		if ((request.getExternalRequest().getSourceFloor() > request.getInternalRequest().getDestinationFloor())
+				&& request.getExternalRequest().getDirectionToGo() == Direction.UP) {
+			System.out.println("\nEntered up command but wants to go down\n Changing request to down");
+			int sourceFloor = request.getExternalRequest().getSourceFloor();
+			request.setExternalRequest(new ExternalRequest(Direction.DOWN, sourceFloor));
+		}
+		// Error checking for down button but actually want to go up
+		if ((request.getExternalRequest().getSourceFloor() < request.getInternalRequest().getDestinationFloor())
+				&& request.getExternalRequest().getDirectionToGo() == Direction.DOWN) {
+			System.out.println("\nEntered down command but wants to go up\n Changing request to up");
+			int sourceFloor = request.getExternalRequest().getSourceFloor();
+			request.setExternalRequest(new ExternalRequest(Direction.UP, sourceFloor));
+		}
+
 		if (currentState == State.IDLE) {
 			// check if the elevator is already on the floor on which the user
 			// is if yes then we can directly process the destination floor
@@ -383,7 +389,8 @@ class Elevator {
 			currentJobs.add(request);
 		} else if (currentState == State.MOVING) {
 			// only add to current que if the elevator is going in the same direction as the
-			// request and is going to hit the pickup floor after the current floor.
+			// request and is going to hit the pickup floor after the current floor
+			// otherwise add to the pending jobs
 			if (request.getExternalRequest().getDirectionToGo() != currentDirection) {
 				addtoPendingJobs(request);
 			} else if (request.getExternalRequest().getDirectionToGo() == currentDirection) {
@@ -402,6 +409,7 @@ class Elevator {
 
 	}
 
+	// add the pending request to either down or up set based on direction
 	public void addtoPendingJobs(Request request) {
 		if (request.getExternalRequest().getDirectionToGo() == Direction.UP) {
 			System.out.println("Request added to pending up jobs\n");
@@ -414,18 +422,7 @@ class Elevator {
 
 }
 
-enum State {
-
-	MOVING, STOPPED, IDLE
-
-}
-
-enum Direction {
-
-	UP, DOWN
-
-}
-
+// Class for requests and sorts by source floor
 class Request implements Comparable<Request> {
 	private InternalRequest internalRequest;
 	private ExternalRequest externalRequest;
@@ -473,6 +470,7 @@ class Request implements Comparable<Request> {
 
 }
 
+// Class cretes elevator instance and starts the elevator
 class ProcessJobWorker implements Runnable {
 
 	private Elevator elevator;
@@ -491,6 +489,7 @@ class ProcessJobWorker implements Runnable {
 
 }
 
+// Class creates a new job and adds it to the elevator
 class AddJobWorker implements Runnable {
 
 	private Elevator elevator;
@@ -515,6 +514,7 @@ class AddJobWorker implements Runnable {
 
 }
 
+// request entered outside of elevator
 class ExternalRequest {
 
 	private Direction directionToGo;
@@ -541,6 +541,7 @@ class ExternalRequest {
 		this.sourceFloor = sourceFloor;
 	}
 
+	// only used for debuging
 	@Override
 	public String toString() {
 		return " The Elevator has been requested on floor - " + sourceFloor + " and the person wants go in the - "
@@ -549,6 +550,7 @@ class ExternalRequest {
 
 }
 
+// request entered inside elevator
 class InternalRequest {
 	private int destinationFloor;
 
@@ -623,7 +625,7 @@ public class TestElevator {
 		Thread.sleep(3000);
 		new Thread(new AddJobWorker(elevator, request2)).start();
 
-		// Test 1: Test for generic down command
+		// Test 5: Test for generic down command
 		/*
 		 * ExternalRequest er = new ExternalRequest(Direction.DOWN, 5);
 		 * InternalRequest ir = new InternalRequest(0);
@@ -631,8 +633,8 @@ public class TestElevator {
 		 * new Thread(new AddJobWorker(elevator, request1)).start();
 		 */
 
-		// Test 2: Combind with Test 1 -- Test for up multiple up commmand and pickup in
-		// motion if pickup floor is less then the current floor
+		// Test 6: Combind with Test 5 -- Test for up multiple down commmand and pickup
+		// in motion if pickup floor is greater then the current floor
 		/*
 		 * ExternalRequest er1 = new ExternalRequest(Direction.DOWN, 2);
 		 * InternalRequest ir1 = new InternalRequest(0);
@@ -641,8 +643,8 @@ public class TestElevator {
 		 * new Thread(new AddJobWorker(elevator, request2)).start();
 		 */
 		/*
-		 * //Test 3: Combind with Test 1 -- Test for up multiple up commmand and a
-		 * higher destination floor then the original command is added
+		 * //Test 7: Combind with Test 5 -- Test for up multiple down commmand and a
+		 * lower destination floor then the original command is added
 		 * ExternalRequest er2 = new ExternalRequest(Direction.UP, 4);
 		 * InternalRequest ir2 = new InternalRequest(6);
 		 * Request request3 = new Request(ir2, er2);
@@ -650,10 +652,22 @@ public class TestElevator {
 		 * new Thread(new AddJobWorker(elevator, request3)).start();
 		 */
 
-		// new Thread(new AddJobWorker(elevator, new Request(new InternalRequest(2), new
-		// ExternalRequest(Direction.DOWN, 3)))).start();
-		// new Thread(new AddJobWorker(elevator, new Request(new InternalRequest(1), new
-		// ExternalRequest(Direction.DOWN, 4)))).start();
+		// Format for entry is
+		// new Thread(new AddJobWorker(elevator, new Request(new InternalRequest(floor
+		// you want to go), new ExternalRequest(direction you want to go, floor you want
+		// to pick up )))).start();
+		// to add delay for when command is entered
+		// Thread.sleep(time in ms you want to sleep);
+
+		// Test 8: Test for people who enter the wrong button = Want to go down but push
+		// the
+		// up button
+		ExternalRequest er4 = new ExternalRequest(Direction.UP, 4);
+		InternalRequest ir4 = new InternalRequest(0);
+		Request request4 = new Request(ir4, er4);
+		Thread.sleep(3000);
+		new Thread(new AddJobWorker(elevator, request4)).start();
+
 		try {
 			Thread.sleep(3000);
 		} catch (InterruptedException e) {
